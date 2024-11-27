@@ -1,0 +1,57 @@
+# Byte-compiled files
+*.pyc
+*.pyo
+__pycache__/
+
+# Environment variables
+.env
+*.env
+
+# Django stuff
+db.sqlite3
+/static/
+media/
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# IDE and editor files
+.idea/
+.vscode/
+*.sublime-workspace
+*.sublime-project
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+
+# Logs and other output
+*.log
+*.pot
+*.py[cod]
+coverage.xml
+*.cover
+*.log
+*.pid
+*.seed
+*.py[cod]
+*.sqlite3
+*.log
+*.out
+
+
+
+# Build and packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+*.manifest
+*.spec
+
+# Miscellaneous
+*.bak
+*.swp
+*.lock
