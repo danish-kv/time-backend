@@ -2,8 +2,8 @@ from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.viewsets import ModelViewSet
-from .models import CustomUser, LeaveBalance, LeaveType, LeaveRequest
-from .serializers import LeaveBalanceSerializer, LeaveRequestSerializer, LeaveTypeSerializer, UserSerializer, RegisterSerializer, ProfileSerializer
+from .models import CustomUser, LeaveType, LeaveRequest
+from .serializers import LeaveRequestSerializer, LeaveTypeSerializer, UserSerializer, RegisterSerializer, ProfileSerializer
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from .permissions import IsEmployee, IsSuperUser, IsManager
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -11,21 +11,26 @@ from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.views import APIView
 from django.utils.timezone import now
+from django_filters.rest_framework import DjangoFilterBackend
+
+
+
+
 
 class UserViewSet(ModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = UserSerializer
 
-    # def get_permissions(self):
-    #     if self.action in ['create']:
-    #         return [IsManager()]
-    #     return [IsAuthenticated()]
+    def get_permissions(self):
+        if self.action in ['create']:
+            return [IsManager()]
+        return [IsAuthenticated()]
 
-    # def get_queryset(self):
-    #     user = self.request.user
-    #     if user.role == 'manager':
-    #         return CustomUser.objects.filter(manager=user)
-    #     return super().get_queryset()
+    def get_queryset(self):
+        user = self.request.user
+        if user.role == 'manager':
+            return CustomUser.objects.filter(manager=user)
+        return super().get_queryset()
 
 
     def create(self, request, *args, **kwargs):
@@ -107,16 +112,20 @@ class LeaveRequestViewSet(ModelViewSet):
     queryset = LeaveRequest.objects.all()
     serializer_class = LeaveRequestSerializer
     permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['status', 'leave_type__name']
 
-
-    def create(self, request, *args, **kwargs):
-        print('1st req data = ', request.data)
-        return super().create(request, *args, **kwargs)
     
     def perform_create(self, serializer):
-        print("Validated data before saving:", serializer.validated_data)
         serializer.save(employee=self.request.user)
 
+    def get_queryset(self):
+        user = self.request.user
+        queryset = LeaveRequest.objects.all()
+
+        if not user.is_superuser:
+            queryset = queryset.filter(employee=user)
+        return queryset
 
 class LeaveTypeViewSet(ModelViewSet):
     queryset = LeaveType.objects.all()
@@ -126,9 +135,4 @@ class LeaveTypeViewSet(ModelViewSet):
     def create(self, request, *args, **kwargs):
         print('requested data ======', request.data)
         return super().create(request, *args, **kwargs)
-
-class LeaveBalanceViewSet(ModelViewSet):
-    queryset = LeaveBalance.objects.all()
-    serializer_class = LeaveBalanceSerializer
-    permission_classes = [IsAuthenticated]
 
