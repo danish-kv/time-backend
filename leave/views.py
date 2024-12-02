@@ -66,6 +66,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 
         res.data['user'] = user.username
         res.data['userID'] = user.id
+        res.data['role'] = 'manager' if user.is_superuser else 'employee'
 
         return res
     
