@@ -1,11 +1,11 @@
 from django.shortcuts import render
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status, filters
 from rest_framework.viewsets import ModelViewSet
 from .models import CustomUser, LeaveType, LeaveRequest
 from .serializers import LeaveRequestSerializer, LeaveTypeSerializer, UserSerializer, RegisterSerializer, ProfileSerializer
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from .permissions import IsEmployee, IsSuperUser, IsManager
+from .permissions import IsEmployee, IsManager
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -20,6 +20,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 class UserViewSet(ModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = UserSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['email', 'username']
 
     def get_permissions(self):
         if self.action in ['create']:
@@ -27,16 +29,7 @@ class UserViewSet(ModelViewSet):
         return [IsAuthenticated()]
 
     def get_queryset(self):
-        user = self.request.user
-        if user.role == 'manager':
-            return CustomUser.objects.filter(manager=user)
-        return super().get_queryset()
-
-
-    def create(self, request, *args, **kwargs):
-        print("request ===", request.data)
-        return super().create(request, *args, **kwargs)
-    
+        return CustomUser.objects.all().exclude(is_superuser=True)
 
 
 
@@ -136,3 +129,32 @@ class LeaveTypeViewSet(ModelViewSet):
         print('requested data ======', request.data)
         return super().create(request, *args, **kwargs)
 
+
+
+class DashboardAPIView(APIView):
+    permission_classes = [IsManager]
+
+    def get(self,request):
+        total_employees = CustomUser.objects.count()
+        total_pending = LeaveRequest.objects.filter(status='pending').count()
+        total_approved = LeaveRequest.objects.filter(status='approved').count()
+        total_rejected = LeaveRequest.objects.filter(status='rejected').count()
+        
+        last_three_pending = LeaveRequest.objects.filter(status='pending').order_by('-created_at')[:3]
+
+        serializer = LeaveRequestSerializer(last_three_pending, many=True)
+
+        stats = {
+            'total_employees' : total_employees,
+            'total_pending' : total_pending,
+            'total_approved' : total_approved,
+            'total_rejected' : total_rejected,
+        }
+
+        data = {
+            "stats" : stats,
+            'last_three_pending' : serializer.data
+        }
+
+
+        return Response(data=data)
