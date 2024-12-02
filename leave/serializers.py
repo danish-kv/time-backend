@@ -4,10 +4,34 @@ from rest_framework import serializers
 
 
 
-class UserSerializer(ModelSerializer):
-    password = serializers.CharField(write_only=True)
+
+class RegisterSerializer(ModelSerializer):
+    password = serializers.CharField(write_only=True, required=True)
+
     class Meta:
-        fields = ['username', 'department', 'password']
+        model = CustomUser
+        fields = ['username', 'password', 'email', 'department', 'first_name', 'last_name', 'date_joined']
+
+    def create(self, validate_data):
+        print('validate data ===',validate_data)
+        password = validate_data.pop('password', '')
+        user = CustomUser(**validate_data)
+
+        user.set_password(password)
+        user.save()
+
+        return user
+
+class UserSerializer(ModelSerializer):
+    class Meta:
+        fields = ['username', 'email', 'last_login', 'department']
+        model = CustomUser
+
+
+
+class ProfileSerializer(ModelSerializer):
+    class Meta:
+        fields = ['username', 'email', 'last_login', 'department', 'phone', 'location', 'date_joined']
         model = CustomUser
 
 
@@ -17,12 +41,22 @@ class LeaveTypeSerializer(ModelSerializer):
         model = LeaveType
 
 
+    def create(self, validated_data):
+        print('validate data =====', validated_data)
+        return super().create(validated_data)
+
+
 class LeaveRequestSerializer(ModelSerializer):
     employee = UserSerializer(read_only = True)
-    leave_type = LeaveTypeSerializer()
+    leave_type_detail = LeaveTypeSerializer(source='leave_type', read_only=True) 
+    leave_type = serializers.PrimaryKeyRelatedField(queryset=LeaveType.objects.all())
     class Meta:
-        fields = '__all__'
+        fields = ['id', 'employee', 'leave_type', 'leave_type_detail', 'start_date', 'end_date', 'reason', 'attachment', 'status', 'created_at']
         model = LeaveRequest
+
+    def create(self, validated_data):
+        print('', validated_data)
+        return super().create(validated_data)
 
 
 class LeaveBalanceSerializer(ModelSerializer):
