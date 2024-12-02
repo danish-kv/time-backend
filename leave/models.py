@@ -2,20 +2,20 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 
 class CustomUser(AbstractUser):
-    ROLE_CHOICE = (
-        ("employee", "Employee"),
-        ("manager", "Manager"),
-    )
-    role = models.CharField(choices=ROLE_CHOICE, max_length=10, default="employee")
+    profile = models.ImageField(upload_to='profile/', null=True)
+    role = models.CharField(max_length=10, default="employee")
+    phone = models.IntegerField(null=True, blank=True)
     department = models.CharField(max_length=100, null=True, blank=True)
+    location = models.CharField(max_length=250, null=True, blank=True)
 
     def __str__(self) -> str:
         return self.username
 
 
 class LeaveType(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, unique=True)
     description = models.TextField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
 
     def __str__(self):
         return self.name
@@ -32,8 +32,8 @@ class LeaveRequest(models.Model):
     start_date = models.DateField()
     end_date = models.DateField()
     reason = models.TextField()
+    attachment = models.FileField(upload_to='attachment/', blank=True,null=True)
     status = models.CharField(choices=STATUS_CHOICES, max_length=10, default="pending")
-    manager = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name="managed_requests")
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
