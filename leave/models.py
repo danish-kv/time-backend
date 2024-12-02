@@ -19,6 +19,9 @@ class LeaveType(models.Model):
 
     def __str__(self):
         return self.name
+    
+    class Meta:
+        ordering = ['-id']
 
 
 class LeaveRequest(models.Model): 
@@ -35,6 +38,7 @@ class LeaveRequest(models.Model):
     attachment = models.FileField(upload_to='attachment/', blank=True,null=True)
     status = models.CharField(choices=STATUS_CHOICES, max_length=10, default="pending")
     created_at = models.DateTimeField(auto_now_add=True)
+    comment = models.TextField(null=True)
 
     def __str__(self):
         return f"{self.employee.username} - {self.leave_type.name} - {self.status}"
@@ -43,15 +47,3 @@ class LeaveRequest(models.Model):
         ordering = ["-created_at"]  
 
 
-class LeaveBalance(models.Model): 
-    employee = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
-    leave_type = models.ForeignKey(LeaveType, on_delete=models.CASCADE)
-    total_leaves = models.IntegerField(default=0)
-    used_leaves = models.IntegerField(default=0)
-
-    @property
-    def remaining_leaves(self):
-        return self.total_leaves - self.used_leaves
-
-    def __str__(self):
-        return f"{self.employee.username} - {self.leave_type.name}"

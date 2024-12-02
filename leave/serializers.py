@@ -1,5 +1,5 @@
 from rest_framework.serializers import ModelSerializer
-from .models import CustomUser, LeaveBalance, LeaveRequest, LeaveType
+from .models import CustomUser, LeaveRequest, LeaveType
 from rest_framework import serializers
 
 
@@ -51,17 +51,8 @@ class LeaveRequestSerializer(ModelSerializer):
     leave_type_detail = LeaveTypeSerializer(source='leave_type', read_only=True) 
     leave_type = serializers.PrimaryKeyRelatedField(queryset=LeaveType.objects.all())
     class Meta:
-        fields = ['id', 'employee', 'leave_type', 'leave_type_detail', 'start_date', 'end_date', 'reason', 'attachment', 'status', 'created_at']
+        fields = [ 'id', 'employee', 'leave_type', 'leave_type_detail', 'start_date', 'end_date', 'reason', 
+                  'attachment', 'status', 'created_at', 'comment' ]
         model = LeaveRequest
 
-    def create(self, validated_data):
-        print('', validated_data)
-        return super().create(validated_data)
-
-
-class LeaveBalanceSerializer(ModelSerializer):
-    employee = UserSerializer(read_only = True)
-    class Meta:
-        fields = '__all__'
-        model = LeaveBalance
 
