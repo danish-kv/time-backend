@@ -2,6 +2,7 @@ from rest_framework.serializers import ModelSerializer
 from .models import CustomUser, LeaveRequest, LeaveType
 from rest_framework import serializers
 from django.utils.timezone import now
+from datetime import datetime
 
 
 
@@ -39,9 +40,6 @@ class RegisterSerializer(ModelSerializer):
         if len(password) < 6 :
             raise serializers.ValidationError({'password' : 'Passowrd must be at least 6 characters '})
         
-        department = attrs.get('department', '')
-        if department and not department.isalpha():
-            raise serializers.ValidationError({'department' : 'Department name should only contain letters'})
         
         return attrs
 
@@ -64,9 +62,12 @@ class LeaveTypeSerializer(ModelSerializer):
         fields = '__all__'
         model = LeaveType
 
-
-    def validate_name(self,value):
-        if LeaveType.objects.filter(name__iexact=value).exclude(id=self.instance.id).exists():
+    def validate_name(self, value):
+        if self.instance and LeaveType.objects.filter(name__iexact=value).exclude(id=self.instance.id).exists():
+            raise serializers.ValidationError(
+                'A leave type with this name already exists'
+            )
+        elif not self.instance and LeaveType.objects.filter(name__iexact=value).exists():
             raise serializers.ValidationError(
                 'A leave type with this name already exists'
             )
@@ -89,11 +90,11 @@ class LeaveRequestSerializer(ModelSerializer):
         return value
     
     def validate_end_date(self, value):
-        if self.initial_data.get('start_date'):
-            start_date = self.initial_data.get('start_date')
+        start_date_str = self.initial_data.get('start_date')
+        if start_date_str:
+            start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date() 
             if value < start_date:
                 raise serializers.ValidationError('End date must be on or after the start date')
-            
         return value
     
     def validate_attachment(self, value):
@@ -107,7 +108,7 @@ class LeaveRequestSerializer(ModelSerializer):
         return value
 
     def validate(self, attrs):
-        employee = self.context['requeset'].user
+        employee = self.context['request'].user
         start_date = attrs.get('start_date')
         end_date = attrs.get('end_date')
         leave_type = attrs.get('leave_type')
