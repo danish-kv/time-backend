@@ -95,6 +95,7 @@ class Logout(APIView):
 class ProfileViewSet(ModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = ProfileSerializer
+    permission_classes = [IsEmployee]
 
     def get_queryset(self):
         return CustomUser.objects.filter(id=self.request.user.id)
@@ -120,6 +121,7 @@ class LeaveRequestViewSet(ModelViewSet):
         if not user.is_superuser:
             queryset = queryset.filter(employee=user)
         return queryset
+    
 
 class LeaveTypeViewSet(ModelViewSet):
     queryset = LeaveType.objects.all()

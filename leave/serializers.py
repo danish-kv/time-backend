@@ -11,7 +11,7 @@ class RegisterSerializer(ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ['username', 'password', 'email', 'department', 'first_name', 'last_name', 'date_joined']
+        fields = ['username', 'password', 'email', 'department', 'first_name', 'last_name']
 
     def create(self, validate_data):
         print('validate data ===',validate_data)
@@ -22,6 +22,29 @@ class RegisterSerializer(ModelSerializer):
         user.save()
 
         return user
+    
+    def validate_email(self, value):
+        if CustomUser.objects.filter(email__iexact=value).exists():
+            raise serializers.ValidationError('This email is already taken')
+        return value
+
+    def validate_username(self, value):
+        if CustomUser.objects.filter(username__iexact=value).exists():
+            raise serializers.ValidationError('This username is already taken')
+        return value
+    
+    def validate(self, attrs):
+
+        password = attrs.get('password', '').strip()
+        if len(password) < 6 :
+            raise serializers.ValidationError({'password' : 'Passowrd must be at least 6 characters '})
+        
+        department = attrs.get('department', '')
+        if department and not department.isalpha():
+            raise serializers.ValidationError({'department' : 'Department name should only contain letters'})
+        
+        return attrs
+
 
 class UserSerializer(ModelSerializer):
     class Meta:
