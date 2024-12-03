@@ -132,13 +132,8 @@ CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOWS_CREDENTIALS = True
 
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",  
-]
-CSRF_TRUSTED_ORIGINS = [
-    'http://localhost:5173', 
-]
-
+CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', '').split(',')
+CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',')
 
 
 SIMPLE_JWT = {
