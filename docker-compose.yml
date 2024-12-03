@@ -1,0 +1,34 @@
+services:
+  timeout-web:
+    build: .
+    command: ["gunicorn", "--bind", ":8000", "backend.wsgi:application"]
+    volumes:
+      - .:/app
+      - timeout-media_volume:/app/media/
+    ports:
+      - "8000:8000"
+    depends_on:
+      - timeout-db
+    env_file:
+      - .env
+    networks:
+      - timeout-network
+
+  timeout-db:
+    image: postgres
+    volumes:
+      - timeout-db-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    networks:
+      - timeout-network
+
+volumes:
+  timeout-db-data:
+  timeout-media_volume:
+
+networks:
+  timeout-network:
+    driver: bridge
