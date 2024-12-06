@@ -117,13 +117,12 @@ class LeaveRequestSerializer(ModelSerializer):
             employee=employee,
             start_date__lte=end_date,
             end_date__gte=start_date,
-            status = 'approved',
             leave_type=leave_type
         )
 
         if overlapping_leaves.exists():
             raise serializers.ValidationError(
-                "You already have an approved leave request for this period."
+               {'error' : "You already have an approved leave request for this period."}
             )
 
         return attrs
