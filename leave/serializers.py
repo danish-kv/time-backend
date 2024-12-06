@@ -109,22 +109,22 @@ class LeaveRequestSerializer(ModelSerializer):
 
     def validate(self, attrs):
         employee = self.context['request'].user
-        start_date = attrs.get('start_date')
-        end_date = attrs.get('end_date')
-        leave_type = attrs.get('leave_type')
+        start_date = attrs.get('start_date', None)
+        end_date = attrs.get('end_date', None)
+        leave_type = attrs.get('leave_type', None)
 
-        overlapping_leaves = LeaveRequest.objects.filter(
-            employee=employee,
-            start_date__lte=end_date,
-            end_date__gte=start_date,
-            leave_type=leave_type
-        )
-
-        if overlapping_leaves.exists():
-            raise serializers.ValidationError(
-               {'error' : "You already have an approved leave request for this period."}
+        if start_date and end_date and leave_type:
+            overlapping_leaves = LeaveRequest.objects.filter(
+                employee=employee,
+                start_date__lte=end_date,
+                end_date__gte=start_date,
+                leave_type=leave_type
             )
 
-        return attrs
+            if overlapping_leaves.exists():
+                raise serializers.ValidationError(
+                   {'error': "You already have an approved leave request for this period."}
+                )
 
+        return attrs
 
